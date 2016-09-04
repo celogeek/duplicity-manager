@@ -40,6 +40,10 @@ def process(config, program, action=None, src=None, dest=None):
             process(config, program, "backup", k)
 
 def generate(config, action):
+    if (action == None):
+        print("Missing action")
+        sys.exit(1)
+        
     globalParams = config.get("Global", [])
     actionParams = config.get("Actions", {}).get(action)
     if (actionParams == None):
