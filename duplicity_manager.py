@@ -54,7 +54,7 @@ def generate(config, action):
     def get_all(key, defaults=None):
         return globalParams.get(key, defaults) + serverParams.get(key, defaults) + actionParams.get(key, defaults)
 
-    content = ["""#!/usr/bin/env bash -ex"""]
+    content = ["#!/usr/bin/env bash", "set -ex"]
     # export envs
     content.extend(["export " + k for k in get_all("envs", [])])
     # go to base path of action
