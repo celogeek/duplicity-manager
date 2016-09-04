@@ -54,15 +54,15 @@ def generate(config, action):
     def get_all(key, defaults=None):
         return globalParams.get(key, defaults) + serverParams.get(key, defaults) + actionParams.get(key, defaults)
 
-    content = ["""#!/usr/bin/env bash"""]
+    content = ["""#!/usr/bin/env bash -ex"""]
     # export envs
     content.extend(["export " + k for k in get_all("envs", [])])
     # go to base path of action
-    content.extend(["cd \""+actionParams.get("base", os.getenv("HOME"))+"\""])
+    content.append("cd \""+actionParams.get("base", os.getenv("HOME"))+"\"")
     # pre commands if any
     content.extend([k for k in actionParams.get("pre_commands", [])])
     # setup minimum limit
-    content.extend(["ulimit -n 1024"])
+    content.append("ulimit -n 1024")
     # create duplicity commands
     content.append(" \\\n    ".join(
             itertools.chain(
@@ -75,6 +75,17 @@ def generate(config, action):
     )
     # pre commands if any
     content.extend([k for k in actionParams.get("post_commands", [])])
+    # clean old backup
+    content.append(" \\\n    ".join(
+            itertools.chain(
+                ["duplicity"],
+                ["remove-all-but-n-full"],
+                [str(actionParams.get("keep", "3"))],
+                ["--force"],
+                ["\"" + serverParams.get("base", "") + actionParams.get("to", "") + "\""]
+            )
+        )
+    )
     # cleanup script
     content.append("rm $0")
 
