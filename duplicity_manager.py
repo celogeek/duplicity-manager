@@ -11,30 +11,28 @@ def main():
         sys.exit(1)
 
     config = yaml.load(file(config_filename))
+    process(config, *sys.argv)
 
-    if (len(sys.argv) == 1):
+
+def process(config, program, action=None, src=None, dest=None):
+    if (action == None):
         for k in [
             "list                - list all possibile backups",
             "backup [SRC]        - backup the SRC",
-            "backup-script [SRC] - display the backup script"
+            "backup-script [SRC] - display the backup script",
             "backup-all          - backup everything"
         ]:
             print sys.argv[0] + " " + k
         sys.exit(0)
-
-    process(config, *sys.argv)
-
-
-def process(config, program, action, *args):
-    if (action == "list"):
+    elif (action == "list"):
         print("Actions:")
         for k in config.get("Actions", {}).keys():
             print("  * " + program + " backup " + k)
     elif (action == "backup"):
-        script_name = generate(config, args[0])
+        script_name = generate(config, src)
         os.system(script_name)
     elif (action == "backup-script"):
-        script_name = generate(config, args[0])
+        script_name = generate(config, src)
         os.system("cat \"" + script_name+"\"")
         os.remove(script_name)
     elif(action == "backup-all"):
@@ -49,11 +47,12 @@ def generate(config, action):
         sys.exit(1)
     serverParams = config.get("Servers", {}).get(actionParams.get("server", ""), {})
 
+    def get_all(key, defaults=None):
+        return globalParams.get(key, defaults) + serverParams.get(key, defaults) + actionParams.get(key, defaults)
+
     content = ["""#!/usr/bin/env bash"""]
     # export envs
-    content.extend([
-        "export " + k for k in (globalParams.get("envs", []) + serverParams.get("envs", []) + actionParams.get("envs", []))
-    ])
+    content.extend(["export " + k for k in get_all("envs", [])])
     # go to base path of action
     content.extend(["cd \""+actionParams.get("base", os.getenv("HOME"))+"\""])
     # setup minimum limit
@@ -62,7 +61,7 @@ def generate(config, action):
     content.append(" \\\n    ".join(
             itertools.chain(
                 ["duplicity"],
-                ["--" + k for k in  globalParams.get("options", []) + serverParams.get("options", []) + actionParams.get("options", [])],
+                ["--" + k for k in  get_all("options", [])],
                 ["\"" + actionParams.get("from", "") + "\""],
                 ["\"" + serverParams.get("base", "") + actionParams.get("to", "") + "\""]
             )
