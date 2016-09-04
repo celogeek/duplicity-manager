@@ -1,0 +1,26 @@
+Global:
+  envs:
+    - PASSPHRASE='YOUR_ENCRYPT_PASSPHRASE'
+    - SIGN_PASSPHRASE='YOUR_SIGN_PASSPHRASE'
+  options:
+    - verbosity=info
+    - encrypt-key=YOUR_GPG_ENCRYPT_KEY
+    - sign-key=YOUR_GPG_SIGN_KEY
+    - full-if-older-than=90D
+    - num-retries=3
+    - asynchronous-upload
+    - volsize=256
+Servers:
+  backblaze-home:
+    envs:
+      - ACCOUNT='YOUR_ACCOUNT_ID'
+      - APPLICATION='YOUR_APPLICATION_ID'
+    base: b2://$ACCOUNT:$APPLICATION@my-home/
+Actions:
+  Devel:
+    server: backblaze-home
+    base: BASE_DIRECTORY_TO_CHDIR_BEFORE_BACKUP
+    from: DIRECTORY_TO_BACKUP_RELATIVE_TO_base_OR_ABSOLUTE
+    to: DESTINATION_WILL_BE_CONCATENATE_TO_SERVER_base
+    options:
+      - gpg-options="--compress-algo=bzip2 --bzip2-compress-level=9"
