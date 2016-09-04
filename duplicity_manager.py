@@ -12,6 +12,15 @@ def main():
 
     config = yaml.load(file(config_filename))
 
+    if (len(sys.argv) == 1):
+        for k in [
+            "list                - list all possibile backups",
+            "backup [SRC]        - backup the SRC",
+            "backup-script [SRC] - display the backup script"
+        ]:
+            print sys.argv[0] + " " + k
+        sys.exit(0)
+
     process(config, *sys.argv)
 
 
@@ -21,25 +30,35 @@ def process(config, program, action, *args):
         for k in config.get("Actions", {}).keys():
             print("  * " + program + " backup " + k)
     elif (action == "backup"):
-        script = generate(config, args[0])
-
+        script_name = generate(config, args[0])
+        os.system(script_name)
+    elif (action == "backup-script"):
+        script_name = generate(config, args[0])
+        os.system("cat \"" + script_name+"\"")
+        os.remove(script_name)
 
 def generate(config, action):
-    params = config.get("Global", [])
+    globalParams = config.get("Global", [])
     actionParams = config.get("Actions", {}).get(action)
     if (actionParams == None):
         print("Action \"" + action + "\" doesn't exists !")
         sys.exit(1)
-    serverParams = config.get("Servers", {}).get(actionParams.get("proto", ""), {})
+    serverParams = config.get("Servers", {}).get(actionParams.get("server", ""), {})
 
     content = ["""#!/usr/bin/env bash"""]
-    content.extend(["export " + k for k in serverParams.get("envs", [])])
+    # export envs
+    content.extend([
+        "export " + k for k in (globalParams.get("envs", []) + serverParams.get("envs", []) + actionParams.get("envs", []))
+    ])
+    # go to base path of action
     content.extend(["cd \""+actionParams.get("base", os.getenv("HOME"))+"\""])
+    # setup minimum limit
     content.extend(["ulimit -n 1024"])
+    # create duplicity commands
     content.append(" \\\n    ".join(
             itertools.chain(
                 ["duplicity"],
-                ["--" + k for k in params + actionParams.get("options", [])],
+                ["--" + k for k in  globalParams.get("options", []) + serverParams.get("options", []) + actionParams.get("options", [])],
                 ["\"" + actionParams.get("from", "") + "\""],
                 ["\"" + serverParams.get("base", "") + actionParams.get("to", "") + "\""]
             )
@@ -53,7 +72,7 @@ def generate(config, action):
     script.close()
 
     os.chmod(script.name, 0700)
-    os.execl(script.name, script.name)
+    return script.name
 
 if __name__ == '__main__':
     main()
