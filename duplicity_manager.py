@@ -17,6 +17,7 @@ def main():
             "list                - list all possibile backups",
             "backup [SRC]        - backup the SRC",
             "backup-script [SRC] - display the backup script"
+            "backup-all          - backup everything"
         ]:
             print sys.argv[0] + " " + k
         sys.exit(0)
@@ -36,6 +37,9 @@ def process(config, program, action, *args):
         script_name = generate(config, args[0])
         os.system("cat \"" + script_name+"\"")
         os.remove(script_name)
+    elif(action == "backup-all"):
+        for k in config.get("Actions", {}).keys():
+            process(config, program, "backup", k)
 
 def generate(config, action):
     globalParams = config.get("Global", [])
