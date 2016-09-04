@@ -43,7 +43,7 @@ def generate(config, action):
     if (action == None):
         print("Missing action")
         sys.exit(1)
-        
+
     globalParams = config.get("Global", [])
     actionParams = config.get("Actions", {}).get(action)
     if (actionParams == None):
@@ -59,6 +59,8 @@ def generate(config, action):
     content.extend(["export " + k for k in get_all("envs", [])])
     # go to base path of action
     content.extend(["cd \""+actionParams.get("base", os.getenv("HOME"))+"\""])
+    # pre commands if any
+    content.extend([k for k in actionParams.get("pre_commands", [])])
     # setup minimum limit
     content.extend(["ulimit -n 1024"])
     # create duplicity commands
@@ -71,6 +73,9 @@ def generate(config, action):
             )
         )
     )
+    # pre commands if any
+    content.extend([k for k in actionParams.get("post_commands", [])])
+    # cleanup script
     content.append("rm $0")
 
     script = tempfile.NamedTemporaryFile(delete=False)
