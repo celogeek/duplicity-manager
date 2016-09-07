@@ -1,0 +1,4 @@
+# Install
+
+pip install --upgrade -r https://raw.githubusercontent.com/celogeek/duplicity-manager/master/requirements.txt
+pip install --upgrade git+https://github.com/celogeek/duplicity-manager.git
