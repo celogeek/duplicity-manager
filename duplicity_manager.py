@@ -104,7 +104,7 @@ def generate(config, action):
     content.append("rm $0")
 
     script = tempfile.NamedTemporaryFile(delete=False)
-    script.write("\n".join(content))
+    script.write("\n".join(map(lambda x: x.encode("utf-8"), content)))
     script.write("\n")
     script.close()
 
@@ -147,7 +147,7 @@ def generate_restore(config, action, dest, force=False):
     content.append("rm $0")
 
     script = tempfile.NamedTemporaryFile(delete=False)
-    script.write("\n".join(content))
+    script.write("\n".join(map(lambda x: x.encode("utf-8"), content)))
     script.write("\n")
     script.close()
 
