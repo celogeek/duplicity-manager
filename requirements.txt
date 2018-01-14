@@ -1,1 +1,2 @@
 https://code.launchpad.net/duplicity/0.7-series/0.7.16/+download/duplicity-0.7.16.tar.gz
+b2
